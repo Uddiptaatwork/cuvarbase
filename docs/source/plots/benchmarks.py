@@ -112,7 +112,7 @@ def time_cuvarbase_bls(t, y, dy, freqs, qmin=1e-2, qmax=0.5,
         return eebls_gpu(t, y, dy, freqs, qmin=qmin, qmax=qmax,
                          **kw)
 
-    qvals = kwargs.get('qvals', None)
+    qvals = kwargs.get('qvals')
     if freqs is None:
         freqs, qvals = bls.transit_autofreq(t, **kw)
     elif qvals is None:
@@ -147,9 +147,7 @@ def time_group(task_dict, group_func, values):
     times = {}
     for name in task_dict.keys():
         print(name)
-        dts = []
-        for v in tqdm(values):
-            dts.append((v, group_func(task_dict[name], v)))
+        dts = [(v, group_func(task_dict[name], v)) for v in tqdm(values)]
         times[name] = dts
     return times
 
@@ -241,15 +239,13 @@ print(device_name)
 #    print("{attr}: {value}".format(attr=attr, value=attrs[attr]))
 
 group_times = {}
-for group in groups.keys():
+for group in groups:
     print("="*len(group))
     print(group)
     print("="*len(group))
     group_times[group] = time_group(*groups[group])
 
-for group in group_times:
-    times = group_times[group]
-
+for group, times in group_times.items():
     f, ax = plt.subplots()
     for taskname in sorted(list(times.keys())):
         values, dts = zip(*times[taskname])
@@ -260,7 +256,7 @@ for group in group_times:
     ax.legend(loc='best')
     ax.set_yscale('log')
     ax.set_xscale('log')
-    
+
     device_name.replace(' ', '_')
     group.replace(' ', '_')
     fname = '{dev}-{group}.png'.format(dev=device_name.replace(' ', '_'),

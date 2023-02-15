@@ -6,7 +6,10 @@ rand = np.random.RandomState(100)
 freq = 40
 def data(ndata=100, freq=freq, sigma=0.4):
     t = np.sort(rand.rand(ndata))
-    y = sum([np.cos(2 * np.pi * n * freq * t - n) / np.sqrt(abs(n - 2) + 1) for n in range(4)])
+    y = sum(
+        np.cos(2 * np.pi * n * freq * t - n) / np.sqrt(abs(n - 2) + 1)
+        for n in range(4)
+    )
     dy = sigma * np.ones_like(t)
 
     y += dy * rand.randn(ndata)

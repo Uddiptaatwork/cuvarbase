@@ -30,11 +30,14 @@ def pow_cpu(request):
     freqs = np.linspace(0, 100./(max(t) - min(t)), pytest.nfreqs)
     freqs += 0.5 * (freqs[1] - freqs[0])
 
-    pow_cpu = pdm2_cpu(t, y, w, freqs,
-                       linterp=(request.param == 'binned_linterp'),
-                       nbins=pytest.nbins)
-
-    return pow_cpu
+    return pdm2_cpu(
+        t,
+        y,
+        w,
+        freqs,
+        linterp=(request.param == 'binned_linterp'),
+        nbins=pytest.nbins,
+    )
 
 @pytest.fixture(scope="function")
 def binless_pow_cpu(request):
@@ -51,9 +54,9 @@ def binless_pow_cpu(request):
     freqs = np.linspace(0, 100./(max(t) - min(t)), pytest.nfreqs)
     freqs += 0.5 * (freqs[1] - freqs[0])
 
-    pow_cpu = binless_pdm_cpu(t, y, w, freqs, tophat=(request.param == 'binless_tophat'))
-
-    return pow_cpu
+    return binless_pdm_cpu(
+        t, y, w, freqs, tophat=(request.param == 'binless_tophat')
+    )
 
 @pytest.fixture(scope="function")
 def pow_gpu(request):

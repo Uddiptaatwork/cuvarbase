@@ -31,27 +31,23 @@ class NFFTMemory(object):
         self.precomp_psi = precomp_psi
 
         # set datatypes
-        self.real_type = np.float32 if not self.use_double \
-            else np.float64
-        self.complex_type = np.complex64 if not self.use_double \
-            else np.complex128
+        self.real_type = np.float64 if self.use_double else np.float32
+        self.complex_type = np.complex128 if self.use_double else np.complex64
 
-        self.other_settings = {}
-        self.other_settings.update(kwargs)
-
-        self.t = kwargs.get('t', None)
-        self.y = kwargs.get('y', None)
+        self.other_settings = dict(kwargs)
+        self.t = kwargs.get('t')
+        self.y = kwargs.get('y')
         self.f0 = kwargs.get('f0', 0.)
-        self.n0 = kwargs.get('n0', None)
-        self.nf = kwargs.get('nf', None)
-        self.t_g = kwargs.get('t_g', None)
-        self.y_g = kwargs.get('y_g', None)
-        self.ghat_g = kwargs.get('ghat_g', None)
-        self.ghat_c = kwargs.get('ghat_c', None)
-        self.q1 = kwargs.get('q1', None)
-        self.q2 = kwargs.get('q2', None)
-        self.q3 = kwargs.get('q3', None)
-        self.cu_plan = kwargs.get('cu_plan', None)
+        self.n0 = kwargs.get('n0')
+        self.nf = kwargs.get('nf')
+        self.t_g = kwargs.get('t_g')
+        self.y_g = kwargs.get('y_g')
+        self.ghat_g = kwargs.get('ghat_g')
+        self.ghat_c = kwargs.get('ghat_c')
+        self.q1 = kwargs.get('q1')
+        self.q2 = kwargs.get('q2')
+        self.q3 = kwargs.get('q3')
+        self.cu_plan = kwargs.get('cu_plan')
 
         D = (2 * self.sigma - 1) * np.pi
         self.b = float(2 * self.sigma * self.m) / D
@@ -426,10 +422,7 @@ class NFFTAsyncProcess(GPUAsyncProcess):
         m: int
             The filter radius (in grid points)
         """
-        if self.autoset_m:
-            return self.estimate_m(N)
-        else:
-            return self.m
+        return self.estimate_m(N) if self.autoset_m else self.m
 
     def _compile_and_prepare_functions(self, **kwargs):
         module_txt = _module_reader(find_kernel('cunfft'), self._cpp_defs)
@@ -463,8 +456,9 @@ class NFFTAsyncProcess(GPUAsyncProcess):
             func = self.module.get_function(function)
             self.prepared_functions[function] = func.prepare(dtype)
 
-        self.function_tuple = tuple([self.prepared_functions[f]
-                                     for f in self.function_names])
+        self.function_tuple = tuple(
+            self.prepared_functions[f] for f in self.function_names
+        )
 
     def allocate(self, data, **kwargs):
         """
@@ -525,19 +519,16 @@ class NFFTAsyncProcess(GPUAsyncProcess):
             List of adjoint NFFTs
 
         """
-        if not hasattr(self, 'prepared_functions') or \
-            not all([func in self.prepared_functions
-                     for func in self.function_names]):
+        if not hasattr(self, 'prepared_functions') or any(
+            func not in self.prepared_functions for func in self.function_names
+        ):
             self._compile_and_prepare_functions(**kwargs)
 
         if memory is None:
             memory = self.allocate(data, **kwargs)
 
-        nfft_kwargs = dict(block_size=self.block_size)
-        nfft_kwargs.update(kwargs)
-
-        results = [nfft_adjoint_async(mem, self.function_tuple,
-                                      **nfft_kwargs)
-                   for mem in memory]
-
-        return results
+        nfft_kwargs = dict(block_size=self.block_size) | kwargs
+        return [
+            nfft_adjoint_async(mem, self.function_tuple, **nfft_kwargs)
+            for mem in memory
+        ]

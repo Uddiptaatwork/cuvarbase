@@ -13,8 +13,7 @@ def weights(err):
 
 
 def find_kernel(name):
-    return pkg_resources.resource_filename('cuvarbase',
-                                           'kernels/%s.cu' % (name))
+    return pkg_resources.resource_filename('cuvarbase', f'kernels/{name}.cu')
 
 
 def _module_reader(fname, cpp_defs=None):
@@ -99,8 +98,7 @@ def autofrequency(t, nyquist_factor=5, samples_per_peak=5,
 
 def dphase(dt, freq):
     dph = dt * freq - np.floor(dt * freq)
-    dph_final = dph if dph < 0.5 else 1 - dph
-    return dph_final
+    return dph if dph < 0.5 else 1 - dph
 
 
 def get_autofreqs(t, **kwargs):

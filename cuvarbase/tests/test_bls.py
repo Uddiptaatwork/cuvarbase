@@ -428,12 +428,17 @@ class TestBLS(object):
         nf = int(np.ceil((fmax - fmin) / df))
         freqs = fmin + df * np.arange(nf)
 
-        kw = dict(qmin=1e-2, qmax=0.5, dphi=dphi,
-                  ignore_negative_delta_sols=ignore_negative_delta_sols,
-                  freq_batch_size=freq_batch_size, dlogq=dlogq)
-
-        kw.update(kwargs)
-
+        kw = (
+            dict(
+                qmin=1e-2,
+                qmax=0.5,
+                dphi=dphi,
+                ignore_negative_delta_sols=ignore_negative_delta_sols,
+                freq_batch_size=freq_batch_size,
+                dlogq=dlogq,
+            )
+            | kwargs
+        )
         power = eebls_gpu_fast(t, y, err, freqs, **kw)
 
         power0, sols = eebls_gpu(t, y, err, freqs, **kw)

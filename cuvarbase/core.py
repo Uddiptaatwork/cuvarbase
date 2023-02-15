@@ -12,8 +12,8 @@ from pycuda.compiler import SourceModule
 
 class GPUAsyncProcess(object):
     def __init__(self, *args, **kwargs):
-        self.reader = kwargs.get('reader', None)
-        self.nstreams = kwargs.get('nstreams', None)
+        self.reader = kwargs.get('reader')
+        self.nstreams = kwargs.get('nstreams')
         self.function_kwargs = kwargs.get('function_kwargs', {})
         self.device = kwargs.get('device', 0)
         self.streams = []
@@ -25,7 +25,7 @@ class GPUAsyncProcess(object):
         self.prepared_functions = {}
 
     def _create_streams(self, n):
-        for i in range(n):
+        for _ in range(n):
             self.streams.append(cuda.Stream())
 
     def _compile_and_prepare_functions(self):
@@ -36,7 +36,7 @@ class GPUAsyncProcess(object):
 
     def finish(self):
         """ synchronize all active streams """
-        for i, stream in enumerate(self.streams):
+        for stream in self.streams:
             stream.synchronize()
 
     def batched_run(self, data, batch_size=10, **kwargs):

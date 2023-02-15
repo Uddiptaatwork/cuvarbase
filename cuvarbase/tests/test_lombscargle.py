@@ -152,7 +152,7 @@ class TestLombScargle(object):
         assert_similar(pgpu_reg, pgpu_ds)
 
     def test_multiple_datasets(self, ndatas=5):
-        datas = [data() for i in range(ndatas)]
+        datas = [data() for _ in range(ndatas)]
         ls_proc = LombScargleAsyncProcess(sigma=nfft_sigma)
 
         mult_results = ls_proc.run(datas, nyquist_factor=nfac,
@@ -177,8 +177,7 @@ class TestLombScargle(object):
                          samples_per_peak=spp, nyquist_factor=nfac,
                          **kwargs):
 
-        datas = [data(ndata=rand.randint(50, 100))
-                 for i in range(ndatas)]
+        datas = [data(ndata=rand.randint(50, 100)) for _ in range(ndatas)]
         ls_proc = LombScargleAsyncProcess(sigma=sigma, **kwargs)
 
         kw = dict(nyquist_factor=nyquist_factor,
@@ -208,14 +207,12 @@ class TestLombScargle(object):
                                      **kwargs):
 
         frequencies = 10 + rand.rand(ndatas) * 100.
-        datas = [data(ndata=rand.randint(50, 100),
-                      freq=freq)
-                 for i, freq in enumerate(frequencies)]
+        datas = [
+            data(ndata=rand.randint(50, 100), freq=freq) for freq in frequencies
+        ]
         ls_proc = LombScargleAsyncProcess(sigma=sigma, **kwargs)
 
-        kw = dict(samples_per_peak=spp,
-                  batch_size=batch_size)
-        kw.update(kwargs)
+        kw = dict(samples_per_peak=spp, batch_size=batch_size) | kwargs
         batched_results = ls_proc.batched_run_const_nfreq(datas, **kw)
         ls_proc.finish()
 

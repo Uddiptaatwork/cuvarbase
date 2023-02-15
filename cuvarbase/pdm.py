@@ -22,7 +22,7 @@ def var_tophat(t, y, w, freq, dphi):
     for i, (T, Y, W) in enumerate(zip(t, y, w)):
         mbar = 0.
         wtot = 0.
-        for j, (T2, Y2, W2) in enumerate(zip(t, y, w)):
+        for T2, Y2, W2 in zip(t, y, w):
             dph = dphase(abs(T2 - T), freq)
             if dph < dphi:
                 mbar += W2 * Y2
@@ -39,7 +39,7 @@ def var_gauss(t, y, w, freq, dphi):
         mbar = 0.
         wtot = 0.
 
-        for j, (T2, Y2, W2) in enumerate(zip(t, y, w)):
+        for T2, Y2, W2 in zip(t, y, w):
             dph = dphase(abs(T2 - T), freq)
             wgt   = W2 * gaussian(dph / dphi)
             mbar += wgt * Y2
@@ -59,9 +59,11 @@ def binned_pdm_model(t, y, w, freq, nbins, linterp=True):
     bins = [int(p * nbins) % nbins for p in phase]
 
     for i in range(nbins):
-        wtot = max([sum([W for j, W in enumerate(w) if bins[j] == i]), 1E-10])
-        bin_means[i] = sum([W * Y for j, (Y, W) in enumerate(zip(y, w))
-                            if bins[j] == i]) / wtot
+        wtot = max([sum(W for j, W in enumerate(w) if bins[j] == i), 1E-10])
+        bin_means[i] = (
+            sum(W * Y for j, (Y, W) in enumerate(zip(y, w)) if bins[j] == i)
+            / wtot
+        )
 
     def pred_y(p, nbins=nbins, linterp=linterp, bin_means=bin_means):
         bs = np.array([int(P * nbins) % nbins for P in p])
@@ -196,8 +198,9 @@ class PDMAsyncProcess(GPUAsyncProcess):
 
             t_g, y_g, w_g = None, None, None
             if len(t) > 0:
-                t_g, y_g, w_g = tuple([gpuarray.zeros(len(t), dtype=np.float32)
-                                       for i in range(3)])
+                t_g, y_g, w_g = tuple(
+                    gpuarray.zeros(len(t), dtype=np.float32) for _ in range(3)
+                )
 
             pow_g = gpuarray.zeros(len(pow_cpu), dtype=pow_cpu.dtype)
             freqs_g = gpuarray.to_gpu(np.asarray(freqs).astype(np.float32))
@@ -210,12 +213,12 @@ class PDMAsyncProcess(GPUAsyncProcess):
             kind='binned_linterp', nbins=10, dphi=0.05, **pdm_kwargs):
 
         if kind in ['binless_tophat', 'binless_gauss']:
-            function = 'pdm_%s' % (kind)
+            function = f'pdm_{kind}'
         elif kind in ['binned_linterp','binned_step']:
             function = 'pdm_%s_%dbins' % (kind, nbins)
         else:
             raise KeyError('Function not available. Please use one of the followings: ' + \
-                            'binless_tophat, binless_gauss, binned_linterp, binned_step')
+                                'binless_tophat, binless_gauss, binned_linterp, binned_step')
 
         if function not in self.prepared_functions:
             self._compile_and_prepare_functions(nbins=nbins)
@@ -231,8 +234,7 @@ class PDMAsyncProcess(GPUAsyncProcess):
             gpu_data, pow_cpus = self.allocate(data)
         streams = [s for i, s in enumerate(self.streams) if i < len(data)]
         func = self.prepared_functions[function]
-        results = [pdm_async(stream, cdat, gdat, pcpu, func, dphi=dphi, **pdm_kwargs)
-                   for stream, cdat, gdat, pcpu in
-                   zip(streams, data, gpu_data, pow_cpus)]
-
-        return results
+        return [
+            pdm_async(stream, cdat, gdat, pcpu, func, dphi=dphi, **pdm_kwargs)
+            for stream, cdat, gdat, pcpu in zip(streams, data, gpu_data, pow_cpus)
+        ]

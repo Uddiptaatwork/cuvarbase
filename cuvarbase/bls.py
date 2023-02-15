@@ -215,7 +215,7 @@ def compile_bls(block_size=_default_block_size,
 
     # prepare functions
     if prepare:
-        for name in functions.keys():
+        for name in functions:
             sig = _function_signatures[name]
             functions[name] = functions[name].prepare(sig)
 
@@ -339,7 +339,7 @@ class BLSMemory(object):
         u = (y - self.ybar) * w
         self.yw[:len(t)] = np.asarray(u).astype(self.rtype)[:]
 
-        if any([x is None for x in [self.t_g, self.yw_g, self.w_g]]):
+        if any(x is None for x in [self.t_g, self.yw_g, self.w_g]):
             self.allocate_data()
 
         if self.freqs_g is None:
@@ -641,7 +641,7 @@ def eebls_gpu_custom(t, y, dy, freqs, q_values, phi_values,
 
     yw_g_bins, w_g_bins, bls_tmp_gs, bls_tmp_sol_gs, streams \
         = [], [], [], [], []
-    for i in range(nstreams):
+    for _ in range(nstreams):
         streams.append(cuda.Stream())
         yw_g_bins.append(gpuarray.zeros(nbtot, dtype=np.float32))
         w_g_bins.append(gpuarray.zeros(nbtot, dtype=np.float32))
@@ -739,7 +739,7 @@ def dnbins(nbins, dlogq):
 
 def nbins_iter(i, nb0, dlogq):
     nb = nb0
-    for j in range(i):
+    for _ in range(i):
         nb += dnbins(nb, dlogq)
 
     return nb
@@ -805,9 +805,7 @@ def eebls_gpu(t, y, dy, freqs, qmin=1e-2, qmax=0.5,
     """
 
     def locext(ext, arr, imin=None, imax=None):
-        if isinstance(arr, float) or isinstance(arr, int):
-            return arr
-        return ext(arr[slice(imin, imax)])
+        return arr if isinstance(arr, (float, int)) else ext(arr[slice(imin, imax)])
 
     functions = functions if functions is not None \
         else compile_bls(**kwargs)

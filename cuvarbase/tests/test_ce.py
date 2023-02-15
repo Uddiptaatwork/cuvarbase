@@ -44,7 +44,7 @@ class TestCE(object):
 
     @pytest.mark.parametrize('ndatas', [1, 5, 10])
     def test_multiple_datasets(self, ndatas, **kwargs):
-        datas = [data() for i in range(ndatas)]
+        datas = [data() for _ in range(ndatas)]
         proc = ConditionalEntropyAsyncProcess(**kwargs)
 
         df = 0.02
@@ -90,8 +90,7 @@ class TestCE(object):
                          shmem_lc, weighted,
                          freq_batch_size):
 
-        datas = [data(ndata=rand.randint(50, 100))
-                 for i in range(ndatas)]
+        datas = [data(ndata=rand.randint(50, 100)) for _ in range(ndatas)]
         kwargs = dict(use_double=use_double,
                       mag_bins=mag_bins,
                       phase_bins=phase_bins,
@@ -144,9 +143,9 @@ class TestCE(object):
                                      phase_overlap, use_fast, weighted,
                                      shmem_lc, freq_batch_size):
         frequencies = np.sort(10 + rand.rand(ndatas) * 100.)
-        datas = [data(ndata=rand.randint(50, 100),
-                      freq=freq)
-                 for i, freq in enumerate(frequencies)]
+        datas = [
+            data(ndata=rand.randint(50, 100), freq=freq) for freq in frequencies
+        ]
 
         kwargs = dict(use_double=use_double,
                       mag_bins=mag_bins,

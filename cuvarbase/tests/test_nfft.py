@@ -95,8 +95,7 @@ def simple_gpu_nfft(t, y, nf, sigma=nfft_sigma, use_double=False,
     for stream in proc.streams:
         stream.synchronize()
 
-    nfft_kwargs = dict(samples_per_peak=samples_per_peak)
-    nfft_kwargs.update(kwargs)
+    nfft_kwargs = dict(samples_per_peak=samples_per_peak) | kwargs
     results = proc.run([(t, y, nf)], **nfft_kwargs)
 
     proc.finish()
@@ -116,11 +115,17 @@ class TestNFFT(object):
         t, tsc, y, err = data()
 
         nf = int(nfft_sigma * len(t))
-        gpu_grid = simple_gpu_nfft(t, y, nf, sigma=nfft_sigma, m=nfft_m,
-                                   just_return_gridded_data=True,
-                                   fast_grid=True,
-                                   minimum_frequency=-int(nf/2),
-                                   samples_per_peak=spp)
+        gpu_grid = simple_gpu_nfft(
+            t,
+            y,
+            nf,
+            sigma=nfft_sigma,
+            m=nfft_m,
+            just_return_gridded_data=True,
+            fast_grid=True,
+            minimum_frequency=-(nf // 2),
+            samples_per_peak=spp,
+        )
 
         # get CPU grid
         cpu_grid = get_cpu_grid(tsc, y, nf, sigma=nfft_sigma, m=nfft_m)
@@ -131,11 +136,17 @@ class TestNFFT(object):
         t, tsc, y, err = data()
 
         nf = int(nfft_sigma * len(t))
-        gpu_grid = simple_gpu_nfft(t, y, nf, sigma=nfft_sigma, m=nfft_m,
-                                   just_return_gridded_data=True,
-                                   fast_grid=True,
-                                   minimum_frequency=-int(nf/2),
-                                   samples_per_peak=spp)
+        gpu_grid = simple_gpu_nfft(
+            t,
+            y,
+            nf,
+            sigma=nfft_sigma,
+            m=nfft_m,
+            just_return_gridded_data=True,
+            fast_grid=True,
+            minimum_frequency=-(nf // 2),
+            samples_per_peak=spp,
+        )
 
         # get python version of gpu grid calculation
         cpu_grid = gpu_grid_scalar(tsc, y, nfft_sigma, nfft_m, nf)
@@ -147,11 +158,17 @@ class TestNFFT(object):
         t, tsc, y, err = data()
 
         nf = int(nfft_sigma * len(t))
-        gpu_grid = simple_gpu_nfft(t, y, nf, sigma=nfft_sigma, m=nfft_m,
-                                   just_return_gridded_data=True,
-                                   fast_grid=False,
-                                   minimum_frequency=-int(nf/2),
-                                   samples_per_peak=spp)
+        gpu_grid = simple_gpu_nfft(
+            t,
+            y,
+            nf,
+            sigma=nfft_sigma,
+            m=nfft_m,
+            just_return_gridded_data=True,
+            fast_grid=False,
+            minimum_frequency=-(nf // 2),
+            samples_per_peak=spp,
+        )
 
         # get python version of gpu grid calculation
         cpu_grid = gpu_grid_scalar(tsc, y, nfft_sigma, nfft_m, nf)
@@ -163,11 +180,17 @@ class TestNFFT(object):
         t, tsc, y, err = data()
 
         nf = int(nfft_sigma * len(t))
-        gpu_grid = simple_gpu_nfft(t, y, nf, sigma=nfft_sigma, m=nfft_m,
-                                   just_return_gridded_data=True,
-                                   fast_grid=False,
-                                   minimum_frequency=-int(nf/2),
-                                   samples_per_peak=spp)
+        gpu_grid = simple_gpu_nfft(
+            t,
+            y,
+            nf,
+            sigma=nfft_sigma,
+            m=nfft_m,
+            just_return_gridded_data=True,
+            fast_grid=False,
+            minimum_frequency=-(nf // 2),
+            samples_per_peak=spp,
+        )
 
         # get CPU grid
         cpu_grid = get_cpu_grid(tsc, y, nf, sigma=nfft_sigma, m=nfft_m)
@@ -257,7 +280,7 @@ class TestNFFT(object):
     def test_nfft_adjoint_async(self, f0=0., ndata=10,
                                 batch_size=3, use_double=False):
         datas = []
-        for i in range(ndata):
+        for _ in range(ndata):
             t, tsc, y, err = data()
             nf = int(nfft_sigma * len(t))
 

@@ -32,7 +32,7 @@ ld_lpath = os.environ.get('LD_LIBRARY_PATH', '')
 
 
 def lpath_insert(p, lpath):
-    return '%s:%s' % (p, lpath)
+    return f'{p}:{lpath}'
 
 dyld_lpath = lpath_insert(cuda_dir, dyld_lpath)
 ld_lpath = lpath_insert(cuda_dir, ld_lpath)
@@ -54,10 +54,10 @@ def version(path):
     See <https://packaging.python.org/en/latest/single_source_version.html>.
     """
     version_file = read(path)
-    version_match = re.search(r"""^__version__ = ['"]([^'"]*)['"]""",
-                              version_file, re.M)
-    if version_match:
-        return version_match.group(1)
+    if version_match := re.search(
+        r"""^__version__ = ['"]([^'"]*)['"]""", version_file, re.M
+    ):
+        return version_match[1]
     raise RuntimeError("Unable to find version string.")
 
 
